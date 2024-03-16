@@ -1281,7 +1281,7 @@
 # other = default
 - name: browser.display.windows.non_native_menus
   type: RelaxedAtomicUint32
-  value: 2
+  value: 0
   mirror: always
   rust: true
 
@@ -5441,12 +5441,12 @@
 
 - name: general.smoothScroll.mouseWheel.durationMaxMS
   type: RelaxedAtomicInt32
-  value: 200
+  value: 400
   mirror: always
 
 - name: general.smoothScroll.mouseWheel.durationMinMS
   type: RelaxedAtomicInt32
-  value: 50
+  value: 200
   mirror: always
 
 - name: general.smoothScroll.other
@@ -5519,7 +5519,7 @@
 # Alternative smooth scroll physics. ("MSD" = Mass-Spring-Damper)
 - name: general.smoothScroll.msdPhysics.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS
@@ -15791,7 +15791,7 @@
 # entry in python/mozbuild/mozbuild/mozinfo.py and test_fission_autostart.py
 - name: widget.non-native-theme.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Whether the non-native theme should always use system colors. Useful mostly

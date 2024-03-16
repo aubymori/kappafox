@@ -819,11 +819,11 @@ pref("browser.dataFeatureRecommendations.enabled", false);
 
 // Temporary pref to control whether or not Private Browsing windows show up
 // as separate icons in the Windows taskbar.
-pref("browser.privateWindowSeparation.enabled", true);
+pref("browser.privateWindowSeparation.enabled", false);
 
 // Use dark theme variant for PBM windows. This is only supported if the theme
 // sets darkTheme data.
-pref("browser.theme.dark-private-windows", true);
+pref("browser.theme.dark-private-windows", false);
 
 // Controls visibility of the privacy segmentation preferences section.
 pref("browser.privacySegmentation.preferences.show", false);
@@ -2900,11 +2900,7 @@ pref("first-startup.timeout", 30000);
 #endif
 
 // Shows 'View Image Info' item in the image context menu
-#ifdef MOZ_DEV_EDITION
-  pref("browser.menu.showViewImageInfo", true);
-#else
-  pref("browser.menu.showViewImageInfo", false);
-#endif
+pref("browser.menu.showViewImageInfo", true);
 
 // Handing URLs to external apps via the "Share URL" menu item could allow a proxy bypass
 #ifdef MOZ_PROXY_BYPASS_PROTECTION
