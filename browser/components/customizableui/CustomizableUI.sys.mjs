@@ -232,16 +232,6 @@ var CustomizableUIInternal = {
       true
     );
 
-    this.registerArea(
-      CustomizableUI.AREA_ADDONS,
-      {
-        type: CustomizableUI.TYPE_PANEL,
-        defaultPlacements: [],
-        anchor: "unified-extensions-button",
-      },
-      false
-    );
-
     let navbarPlacements = [
       "back-button",
       "forward-button",
@@ -320,8 +310,7 @@ var CustomizableUIInternal = {
   get _builtinAreas() {
     return new Set([
       ...this._builtinToolbars,
-      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
-      CustomizableUI.AREA_ADDONS,
+      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
     ]);
   },
 
@@ -626,45 +615,6 @@ var CustomizableUIInternal = {
       ) {
         tabstripPlacements.unshift("firefox-view-button");
       }
-    }
-
-    // Unified Extensions addon button migration, which puts any browser action
-    // buttons in the overflow menu into the addons panel instead.
-    if (currentVersion < 19) {
-      let overflowPlacements =
-        gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] || [];
-      // The most likely case is that there are no AREA_ADDONS placements, in which case the
-      // array won't exist.
-      let addonsPlacements =
-        gSavedState.placements[CustomizableUI.AREA_ADDONS] || [];
-
-      // Migration algorithm for transitioning to Unified Extensions:
-      //
-      // 1. Create two arrays, one for extension widgets, one for built-in widgets.
-      // 2. Iterate all items in the overflow panel, and push them into the
-      //    appropriate array based on whether or not its an extension widget.
-      // 3. Overwrite the overflow panel placements with the built-in widgets array.
-      // 4. Prepend the extension widgets to the addonsPlacements array. Note that this
-      //    does not overwrite this array as a precaution because it's possible
-      //    (though pretty unlikely) that some widgets are already there.
-      //
-      // For extension widgets that were in the palette, they will be appended to the
-      // addons area when they're created within createWidget.
-      let extWidgets = [];
-      let builtInWidgets = [];
-      for (let widgetId of overflowPlacements) {
-        if (CustomizableUI.isWebExtensionWidget(widgetId)) {
-          extWidgets.push(widgetId);
-        } else {
-          builtInWidgets.push(widgetId);
-        }
-      }
-      gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] =
-        builtInWidgets;
-      gSavedState.placements[CustomizableUI.AREA_ADDONS] = [
-        ...extWidgets,
-        ...addonsPlacements,
-      ];
     }
 
     // Add the PBM reset button as the right most button item
@@ -1275,20 +1225,11 @@ var CustomizableUIInternal = {
 
     let currentContextMenu =
       aNode.getAttribute("context") || aNode.getAttribute("contextmenu");
-    let contextMenuForPlace;
-
-    if (
-      CustomizableUI.isWebExtensionWidget(aNode.id) &&
-      (aAreaNode?.id == CustomizableUI.AREA_ADDONS ||
-        aNode.getAttribute("overflowedItem") == "true")
-    ) {
-      contextMenuForPlace = null;
-    } else {
-      contextMenuForPlace =
+    let contextMenuForPlace =
         forcePanel || "panel" == CustomizableUI.getPlaceForItem(aAreaNode)
           ? kPanelItemContextMenu
           : null;
-    }
+    
     if (contextMenuForPlace && !currentContextMenu) {
       aNode.setAttribute("context", contextMenuForPlace);
     } else if (
@@ -2894,16 +2835,6 @@ var CustomizableUIInternal = {
             }
           }
         }
-
-        // Extension widgets cannot enter the customization palette, so if
-        // at this point, we haven't found an area for them, move them into
-        // AREA_ADDONS.
-        if (
-          !widget.currentArea &&
-          CustomizableUI.isWebExtensionWidget(widget.id)
-        ) {
-          this.addWidgetToArea(widget.id, CustomizableUI.AREA_ADDONS);
-        }
       }
     } finally {
       // Ensure we always have this widget in gSeenWidgets, and save
@@ -3275,42 +3206,6 @@ var CustomizableUIInternal = {
     gDefaultTheme.enable();
     gNewElementCount = 0;
     lazy.log.debug("State reset");
-
-    // Later in the function, we're going to add any area-less extension
-    // buttons to the AREA_ADDONS area. We'll remember the old placements
-    // for that area so that we don't need to re-add widgets that are already
-    // in there in the DOM.
-    let oldAddonPlacements = gPlacements[CustomizableUI.AREA_ADDONS] || [];
-
-    // Reset placements to make restoring default placements possible.
-    gPlacements = new Map();
-    gDirtyAreaCache = new Set();
-    gSeenWidgets = new Set();
-    // Clear the saved state to ensure that defaults will be used.
-    gSavedState = null;
-    // Restore the state for each area to its defaults
-    for (let [areaId] of gAreas) {
-      // If the Unified Extensions UI is enabled, we'll be adding any
-      // extension buttons that aren't already in AREA_ADDONS there,
-      // so we can skip restoring the state for it.
-      if (areaId != CustomizableUI.AREA_ADDONS) {
-        this.restoreStateForArea(areaId);
-      }
-    }
-
-    // restoreStateForArea will have normally set an array for the placements
-    // for each area, but since we skip AREA_ADDONS intentionally, that array
-    // doesn't get set, so we do that manually here.
-    gPlacements.set(CustomizableUI.AREA_ADDONS, []);
-
-    for (let [widgetId] of gPalette) {
-      if (
-        CustomizableUI.isWebExtensionWidget(widgetId) &&
-        !oldAddonPlacements.includes(widgetId)
-      ) {
-        this.addWidgetToArea(widgetId, CustomizableUI.AREA_ADDONS);
-      }
-    }
   },
 
   _rebuildRegisteredAreas() {
@@ -3465,29 +3360,6 @@ var CustomizableUIInternal = {
       gAreas.get(aArea).get("type") == CustomizableUI.TYPE_PANEL
     ) {
       return false;
-    }
-
-    if (
-      aArea == CustomizableUI.AREA_ADDONS &&
-      !CustomizableUI.isWebExtensionWidget(aWidgetId)
-    ) {
-      return false;
-    }
-
-    if (CustomizableUI.isWebExtensionWidget(aWidgetId)) {
-      // Extension widgets cannot move to the customization palette.
-      if (aArea == CustomizableUI.AREA_NO_AREA) {
-        return false;
-      }
-
-      // Extension widgets cannot move to panels, with the exception of the
-      // AREA_ADDONS area.
-      if (
-        gAreas.get(aArea).get("type") == CustomizableUI.TYPE_PANEL &&
-        aArea != CustomizableUI.AREA_ADDONS
-      ) {
-        return false;
-      }
     }
 
     let placement = this.getPlacementOfWidget(aWidgetId);
@@ -3741,10 +3613,6 @@ export var CustomizableUI = {
    * Constant reference to the ID of the non-dymanic (fixed) list in the overflow panel.
    */
   AREA_FIXED_OVERFLOW_PANEL: "widget-overflow-fixed-list",
-  /**
-   * Constant reference to the ID of the addons area.
-   */
-  AREA_ADDONS: "unified-extensions-area",
   /**
    * Constant reference to the ID of the customization palette, which is
    * where widgets go when they're not assigned to an area. Note that this

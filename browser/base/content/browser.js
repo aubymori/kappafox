@@ -7387,24 +7387,12 @@ var ToolbarContextMenu = {
     }
 
     if (pinToToolbar) {
-      pinToToolbar.hidden = !addon;
+      pinToToolbar.hidden = true;
     }
 
     reportExtension.hidden = !addon || !gAddonAbuseReportEnabled;
 
     if (addon) {
-      popup.querySelector(".customize-context-moveToPanel").hidden = true;
-      popup.querySelector(".customize-context-removeFromToolbar").hidden = true;
-
-      if (pinToToolbar) {
-        let widgetId = this._getWidgetId(popup);
-        if (widgetId) {
-          let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
-          let inToolbar = area != CustomizableUI.AREA_ADDONS;
-          pinToToolbar.setAttribute("checked", inToolbar);
-        }
-      }
-
       removeExtension.disabled = !(
         addon.permissions & AddonManager.PERM_CAN_UNINSTALL
       );
