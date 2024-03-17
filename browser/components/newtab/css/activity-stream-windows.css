@@ -1193,13 +1193,13 @@ main section {
 }
 .search-wrapper .logo-and-wordmark .wordmark {
   background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
-  background-size: 134px;
+  background-size: 276px;
   -moz-context-properties: fill;
   display: inline-block;
   fill: var(--newtab-wordmark-color);
   height: 82px;
   margin-inline-start: 16px;
-  width: 134px;
+  width: 276px;
 }
 @media (max-width: 609px) {
   .search-wrapper .logo-and-wordmark .logo {

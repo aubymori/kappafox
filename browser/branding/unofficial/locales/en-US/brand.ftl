@@ -16,10 +16,10 @@
 ## For further details, consult:
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
--brand-shorter-name = Kappafox
--brand-short-name = Kappafox
--brand-shortcut-name = Kappafox
--brand-full-name = Kappafox
+-brand-shorter-name = Nara
+-brand-short-name = Nara
+-brand-shortcut-name = Nara
+-brand-full-name = Nara
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Nightly, Beta, etc.).
 -brand-product-name = Firefox
