@@ -8646,7 +8646,7 @@ function switchToTabHavingURI(
         ignoreQueryString || replaceQueryString,
         ignoreFragmentWhenComparing
       );
-      let browserUserContextId = browser.getAttribute("usercontextid");
+      let browserUserContextId = browser.getAttribute("usercontextid") || "";
       if (aUserContextId != null && aUserContextId != browserUserContextId) {
         continue;
       }
