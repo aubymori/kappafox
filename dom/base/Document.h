@@ -133,6 +133,7 @@ class JSTracer;
 class PLDHashTable;
 class gfxUserFontSet;
 class mozIDOMWindowProxy;
+class nsBindingManager;
 class nsCachableElementsByNameNodeList;
 class nsCommandManager;
 class nsContentList;
@@ -1519,6 +1520,8 @@ class Document : public nsINode,
 
   void DoUnblockOnload();
 
+  void MaybeEndOutermostXBLUpdate();
+
   void DoResolveScheduledPresAttrs();
 
   void RetrieveRelevantHeaders(nsIChannel* aChannel);
@@ -2062,6 +2065,10 @@ class Document : public nsINode,
       return;
     }
     DoUpdateSVGUseElementShadowTrees();
+  }
+  
+  nsBindingManager* BindingManager() const {
+    return mNodeInfoManager->GetBindingManager();
   }
 
   /**
@@ -5260,6 +5267,7 @@ class Document : public nsINode,
 
   RefPtr<EventListenerManager> mListenerManager;
 
+  nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
 
   // Gecko-internal sheets used for extensions and such.

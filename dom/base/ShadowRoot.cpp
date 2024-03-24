@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsWindowSizes.h"
+#include "nsXBLPrototypeBinding.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLDetailsElement.h"

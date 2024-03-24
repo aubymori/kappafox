@@ -535,6 +535,18 @@ ${helpers.predefined_type(
     affects="paint",
 )}
 
+${helpers.predefined_type(
+    "-moz-binding",
+    "url::UrlOrNone",
+    "computed::url::UrlOrNone::none()",
+    engines="gecko",
+    animation_value_type="none",
+    gecko_ffi_name="mBinding",
+    enabled_in="chrome",
+    spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-binding)",
+    affects="layout",
+)}
+
 // The inherent widget type of an element, selected by specifying
 // `appearance: auto`.
 ${helpers.predefined_type(

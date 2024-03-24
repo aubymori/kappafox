@@ -68,6 +68,7 @@ class nsCSSPropertyIDSet;
 class nsCSSValue;
 class nsINode;
 class nsPresContext;
+class nsXBLBinding;
 struct nsFontFaceRuleContainer;
 
 namespace mozilla {

@@ -788,19 +788,12 @@ void nsHttpHandler::BuildUserAgent() {
   mUserAgent += '/';
   mUserAgent += mProductSub;
 
-  bool isFirefox = mAppName.EqualsLiteral("Firefox");
-  if (isFirefox || mCompatFirefoxEnabled) {
-    // "Firefox/x.y" (compatibility) app token
-    mUserAgent += ' ';
-    mUserAgent += mCompatFirefox;
-  }
-  if (!isFirefox) {
-    // App portion
-    mUserAgent += ' ';
-    mUserAgent += mAppName;
-    mUserAgent += '/';
-    mUserAgent += mAppVersion;
-  }
+  // "Firefox/x.y" (compatibility) app token
+  mUserAgent += ' ';
+  mUserAgent += mCompatFirefox;
+  // App portion
+  mUserAgent += " Nara/";
+  mUserAgent += mAppVersion;
 }
 
 #ifdef XP_WIN

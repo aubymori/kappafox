@@ -566,6 +566,7 @@ LOCAL_INCLUDES += [
     "/dom/ipc",
     "/dom/storage",
     "/dom/svg",
+#   "/dom/xbl",
     "/dom/xml",
     "/dom/xslt/xpath",
     "/dom/xul",

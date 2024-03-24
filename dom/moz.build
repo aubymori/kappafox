@@ -82,6 +82,7 @@ DIRS += [
     "webidl",
     "webshare",
     "webtransport",
+#   "xbl",
     "xml",
     "xslt",
     "xul",

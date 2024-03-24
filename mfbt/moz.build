@@ -117,6 +117,7 @@ EXPORTS.mozilla = [
     "Try.h",
     "TypedEnumBits.h",
     "Types.h",
+#   "TypeTraits.h",
     "UniquePtr.h",
     "UniquePtrExtensions.h",
     "Unused.h",

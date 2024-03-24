@@ -9,6 +9,7 @@
 
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
+#include "nsBindingManager.h"
 #include "nsContentUtils.h"
 #include "nsAtom.h"
 #include "nsIFrame.h"
@@ -98,6 +99,20 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
     if (auto* shadowRoot =
             mozilla::dom::ShadowRoot::FromNode(parentAsContent)) {
       return shadowRoot->GetHost();
+    }
+  }
+
+  if (content->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
+      parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    if (nsIContent* xblInsertionPoint = content->GetXBLInsertionPoint()) {
+      return xblInsertionPoint->GetParent();
+    }
+
+    if (parent->OwnerDoc()->BindingManager()->GetBindingWithContent(
+            parentAsContent)) {
+      // This is an unassigned node child of the bound element, so it isn't part
+      // of the flat tree.
+      return nullptr;
     }
   }
 

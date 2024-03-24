@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsXULElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
+#include "nsBindingManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIContentInlines.h"

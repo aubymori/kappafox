@@ -164,8 +164,11 @@ enum : uint32_t {
 
   NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(12),
 
+  // Whether a binding manager may have a pointer to this
+  NODE_MAY_BE_IN_BINDING_MNGR = NODE_FLAG_BIT(13),
+
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 13
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 14
 };
 
 // Flags for selectors that persist to the DOM node.

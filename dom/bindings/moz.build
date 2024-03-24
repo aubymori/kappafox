@@ -87,6 +87,7 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc/transport",
     "/dom/media/webspeech/recognition",
     "/dom/svg",
+#   "/dom/xbl",
     "/dom/xml",
     "/dom/xslt/base",
     "/dom/xslt/xpath",

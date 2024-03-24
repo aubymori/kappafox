@@ -9,6 +9,7 @@
 #ifndef mozilla_dom_BindContext_h__
 #define mozilla_dom_BindContext_h__
 
+#include "nsXBLBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -80,6 +81,17 @@ struct MOZ_STACK_CLASS BindContext final {
         mSubtreeRootChanges(true) {
     MOZ_ASSERT(mInComposedDoc, "Binding NAC in a disconnected subtree?");
   }
+
+  // This is meant to be used to bind XBL anonymous content.
+  BindContext(nsXBLBinding& aBinding, Element& aParentElement)
+      : mDoc(*aParentElement.OwnerDoc()),
+        mBindingParent(aBinding.GetBoundElement()),
+        mInComposedDoc(aParentElement.IsInComposedDoc()),
+        mInUncomposedDoc(aParentElement.IsInUncomposedDoc()),
+        mSubtreeRootChanges(true),
+        mCollectingDisplayedNodeDataDuringLoad(
+            ShouldCollectDisplayedNodeDataDuringLoad(mInComposedDoc, mDoc,
+                                                     aParentElement)) {}
 
  private:
   // Returns true iff the document is in the same origin as the top level

@@ -187,6 +187,8 @@
 #include "nsIDOMXULCommandDispatcher.h"
 
 #include "mozilla/GlobalKeyListener.h"
+#include "nsBindingManager.h"
+#include "nsXBLService.h"
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"

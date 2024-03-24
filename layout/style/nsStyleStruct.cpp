@@ -2038,7 +2038,8 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
 // nsStyleDisplay
 //
 nsStyleDisplay::nsStyleDisplay()
-    : mDisplay(StyleDisplay::Inline),
+    : mBinding(StyleUrlOrNone::None()),
+      mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
       mContentVisibility(StyleContentVisibility::Visible),
       mContainerType(StyleContainerType::Normal),
@@ -2098,7 +2099,8 @@ nsStyleDisplay::nsStyleDisplay()
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
-    : mDisplay(aSource.mDisplay),
+    : mBinding(aSource.mBinding),
+      mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
       mContentVisibility(aSource.mContentVisibility),
       mContainerType(aSource.mContainerType),

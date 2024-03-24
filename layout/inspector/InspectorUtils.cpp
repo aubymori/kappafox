@@ -16,6 +16,9 @@
 #include "nsIContentInlines.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/Document.h"
+#include "nsXBLBinding.h"
+#include "nsBindingManager.h"
+#include "nsXBLPrototypeBinding.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "ChildIterator.h"
@@ -658,6 +661,21 @@ void InspectorUtils::ColorTo(GlobalObject&, const nsACString& aFromColor,
 bool InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
                                      const nsACString& aColorString) {
   return ServoCSSParser::IsValidCSSColor(aColorString);
+}
+
+void InspectorUtils::GetBindingURLs(GlobalObject& aGlobalObject,
+                                    Element& aElement,
+                                    nsTArray<nsString>& aResult) {
+  nsXBLBinding* binding = aElement.GetXBLBinding();
+
+  while (binding) {
+    nsCString spec;
+    nsCOMPtr<nsIURI> bindingURI = binding->PrototypeBinding()->BindingURI();
+    bindingURI->GetSpec(spec);
+    nsString* resultURI = aResult.AppendElement();
+    CopyASCIItoUTF16(spec, *resultURI);
+    binding = binding->GetBaseBinding();
+  }
 }
 
 /* static */

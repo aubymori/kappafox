@@ -159,6 +159,8 @@ class CharacterData : public nsIContent {
   void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override {}
 #endif
 
+  nsXBLBinding* DoGetXBLBinding() const final { return nullptr; }
+
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override {
     RefPtr<CharacterData> result = CloneDataNode(aNodeInfo, true);
     result.forget(aResult);

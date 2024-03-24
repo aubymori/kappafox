@@ -34,6 +34,7 @@
 #include "nsRepeatService.h"
 #include "nsFloatManager.h"
 #include "nsTextControlFrame.h"
+#include "nsXBLService.h"
 #include "txMozillaXSLTProcessor.h"
 #include "nsTreeSanitizer.h"
 #include "nsCellMap.h"
@@ -154,6 +155,7 @@ nsresult nsLayoutStatics::Initialize() {
 
   nsGlobalWindowInner::Init();
   nsGlobalWindowOuter::Init();
+  nsXBLService::Init();
 
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {

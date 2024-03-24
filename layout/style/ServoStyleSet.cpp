@@ -54,6 +54,8 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsPrintfCString.h"
 #include "gfxUserFontSet.h"
+#include "nsXBLPrototypeBinding.h"
+#include "nsBindingManager.h"
 #include "nsWindowSizes.h"
 
 namespace mozilla {

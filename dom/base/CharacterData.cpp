@@ -27,6 +27,7 @@
 #include "nsBidiUtils.h"
 #include "mozilla/Sprintf.h"
 #include "nsWindowSizes.h"
+#include "nsBindingManager.h"
 
 #if defined(ACCESSIBILITY) && defined(DEBUG)
 #  include "nsAccessibilityService.h"
@@ -472,6 +473,8 @@ void CharacterData::UnbindFromTree(UnbindContext& aContext) {
   // Unset frame flags; if we need them again later, they'll get set again.
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
 
+  Document* document = GetComposedDoc();
+
   const bool nullParent = aContext.IsUnbindRoot(this);
   HandleShadowDOMRelatedRemovalSteps(nullParent);
 
@@ -494,6 +497,17 @@ void CharacterData::UnbindFromTree(UnbindContext& aContext) {
 
     if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
       slots->mContainingShadow = nullptr;
+    }
+  }
+
+  if (document && !GetContainingShadow()) {
+    // Notify XBL- & nsIAnonymousContentCreator-generated
+    // anonymous content that the document is changing.
+    // Unlike XBL, bindings for web components shadow DOM
+    // do not get uninstalled.
+    if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+      nsContentUtils::AddScriptRunner(new RemoveFromBindingManagerRunnable(
+          document->BindingManager(), this, document));
     }
   }
 

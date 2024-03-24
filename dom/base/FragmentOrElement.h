@@ -23,6 +23,7 @@
 #include "nsAtomHashKeys.h"
 #include "nsIHTMLCollection.h"
 #include "nsIWeakReferenceUtils.h"
+#include "nsXBLBinding.h"
 
 class ContentUnbinder;
 class nsContentList;
@@ -103,6 +104,7 @@ class FragmentOrElement : public nsIContent {
   uint32_t TextLength() const override;
   bool TextIsOnlyWhitespace() override;
   bool ThreadSafeTextIsOnlyWhitespace() const override;
+  virtual nsXBLBinding* DoGetXBLBinding() const override;
 
   void DestroyContent() override;
   void SaveSubtreeState() override;
@@ -201,6 +203,11 @@ class FragmentOrElement : public nsIContent {
      * ShadowRoot bound to the element.
      */
     RefPtr<ShadowRoot> mShadowRoot;
+
+    /**
+     * XBL binding installed on the element.
+     */
+    RefPtr<nsXBLBinding> mXBLBinding;
 
     /**
      * Web components custom element data.

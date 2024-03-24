@@ -14,6 +14,7 @@
 class nsIURI;
 class nsTextFragment;
 class nsIFrame;
+class nsXBLBinding;
 
 namespace mozilla {
 class EventChainPreVisitor;
@@ -298,6 +299,21 @@ class nsIContent : public nsINode {
    *         native events, but they may be needed by the plug-in.
    */
   virtual IMEState GetDesiredIMEState();
+
+  /**
+   * Gets the current XBL binding that is bound to this element.
+   *
+   * @return the current binding.
+   */
+  nsXBLBinding* GetXBLBinding() const {
+    if (!HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+      return nullptr;
+    }
+
+    return DoGetXBLBinding();
+  }
+
+  virtual nsXBLBinding* DoGetXBLBinding() const = 0;
 
   /**
    * Gets the ShadowRoot binding for this element.

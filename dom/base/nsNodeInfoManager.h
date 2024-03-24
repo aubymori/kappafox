@@ -20,6 +20,7 @@
 #include "nsTHashMap.h"
 #include "nsStringFwd.h"
 
+class nsBindingManager;
 class nsAtom;
 class nsIPrincipal;
 class nsWindowSizes;
@@ -91,6 +92,8 @@ class nsNodeInfoManager final {
   }
 
   void RemoveNodeInfo(mozilla::dom::NodeInfo* aNodeInfo);
+
+  nsBindingManager* GetBindingManager() const { return mBindingManager; }
 
   /**
    * Returns true if SVG nodes in this document have real SVG semantics.
@@ -170,6 +173,7 @@ class nsNodeInfoManager final {
       mCommentNodeInfo;  // WEAK to avoid circular ownership
   mozilla::dom::NodeInfo* MOZ_NON_OWNING_REF
       mDocumentNodeInfo;  // WEAK to avoid circular ownership
+  RefPtr<nsBindingManager> mBindingManager;
   NodeInfoCache mRecentlyUsedNodeInfos;
   mozilla::Maybe<bool> mSVGEnabled;     // Lazily initialized.
   mozilla::Maybe<bool> mMathMLEnabled;  // Lazily initialized.

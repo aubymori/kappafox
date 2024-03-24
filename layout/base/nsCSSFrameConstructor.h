@@ -828,6 +828,24 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      pseudo-frames as needed */
   static const PseudoParentData sPseudoParentData[eParentTypeCount];
 
+  // The information that concerns the frame constructor after loading an XBL
+  // binding.
+  //
+  // This is expected to just be used temporarily to aggregate the different
+  // objects that LoadXBLBindingIfNeeded returns.
+  struct MOZ_STACK_CLASS XBLBindingLoadInfo {
+    mozilla::UniquePtr<PendingBinding> mPendingBinding;
+    bool mSuccess = false;
+
+    // For the error case.
+    XBLBindingLoadInfo();
+    explicit XBLBindingLoadInfo(mozilla::UniquePtr<PendingBinding>);
+  };
+
+  // Returns null mStyle member to signal an error.
+  XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&, const ComputedStyle&,
+                                            uint32_t aFlags);
+
   const FrameConstructionData* FindDataForContent(nsIContent&, ComputedStyle&,
                                                   nsIFrame* aParentFrame,
                                                   ItemFlags aFlags);

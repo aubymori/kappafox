@@ -14,6 +14,8 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "nsIReferrerInfo.h"
+#include "nsBindingManager.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsEscape.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStringFwd.h"
@@ -81,51 +83,51 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
     return;
   }
 
-  if (aFromContent->IsInNativeAnonymousSubtree()) {
-    // This happens, for example, if aFromContent is part of the content
-    // inserted by a call to Document::InsertAnonymousContent, which we
-    // also want to handle.  (It also happens for other native anonymous content
-    // etc.)
-    Element* anonRoot =
-        doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
-    if (anonRoot) {
-      mElement = nsContentUtils::MatchElementId(anonRoot, ref);
-      // We don't have watching working yet for anonymous content, so bail out
-      // here.
-      return;
-    }
-  }
-
-  bool isEqualExceptRef;
-  rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
-  DocumentOrShadowRoot* docOrShadow;
-  if (NS_FAILED(rv) || !isEqualExceptRef) {
-    RefPtr<Document::ExternalResourceLoad> load;
-    doc = doc->RequestExternalResource(aURI, aReferrerInfo, aFromContent,
-                                       getter_AddRefs(load));
-    docOrShadow = doc;
-    if (!doc) {
-      if (!load || !aWatch) {
-        // Nothing will ever happen here
+  nsIContent* bindingParent = aFromContent->GetBindingParent();
+  if (bindingParent && !aFromContent->IsInShadowTree()) {
+    nsXBLBinding* binding = bindingParent->GetXBLBinding();
+    if (!binding) {
+      // This happens, for example, if aFromContent is part of the content
+      // inserted by a call to Document::InsertAnonymousContent, which we
+      // also want to handle.  (It also happens for <use>'s anonymous
+      // content etc.)
+      Element* anonRoot =
+          doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
+      if (anonRoot) {
+        mElement = nsContentUtils::MatchElementId(anonRoot, ref);
+        // We don't have watching working yet for anonymous content, so bail out
+        // here.
         return;
       }
+    } else {
+      bool isEqualExceptRef;
+      rv = aURI->EqualsExceptRef(binding->PrototypeBinding()->DocURI(),
+                                 &isEqualExceptRef);
+      if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
+        // XXX sXBL/XBL2 issue
+        // Our content is an anonymous XBL element from a binding inside the
+        // same document that the referenced URI points to. In order to avoid
+        // the risk of ID collisions we restrict ourselves to anonymous
+        // elements from this binding; specifically, URIs that are relative to
+        // the binding document should resolve to the copy of the target
+        // element that has been inserted into the bound document.
+        // If the URI points to a different document we don't need this
+        // restriction.
+        nsINodeList* anonymousChildren =
+            doc->BindingManager()->GetAnonymousNodesFor(bindingParent);
 
-      DocumentLoadNotification* observer =
-          new DocumentLoadNotification(this, ref);
-      mPendingNotification = observer;
-      load->AddObserver(observer);
-      // Keep going so we set up our watching stuff a bit
+        if (anonymousChildren) {
+          uint32_t length = anonymousChildren->Length();
+          for (uint32_t i = 0; i < length && !mElement; ++i) {
+            mElement =
+                nsContentUtils::MatchElementId(anonymousChildren->Item(i), ref);
+          }
+        }
+
+        // We don't have watching working yet for XBL, so bail out here.
+        return;
+      }
     }
-  } else {
-    docOrShadow = FindTreeToWatch(*aFromContent, ref, aReferenceImage);
-  }
-
-  if (aWatch) {
-    mWatchID = NS_Atomize(ref);
-  }
-
-  mReferencingImage = aReferenceImage;
-  HaveNewDocumentOrShadowRoot(docOrShadow, aWatch, ref);
 }
 
 void IDTracker::ResetWithLocalRef(Element& aFrom, const nsAString& aLocalRef,

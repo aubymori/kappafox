@@ -37,4 +37,5 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "../style",
     "/dom/base",
+#   "/dom/xbl",
 ]

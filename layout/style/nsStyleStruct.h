@@ -1230,6 +1230,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsChangeHint CalcTransformPropertyDifference(
       const nsStyleDisplay& aNewData) const;
 
+  mozilla::StyleUrlOrNone mBinding;
+
   mozilla::StyleDisplay mDisplay;
   // Saved mDisplay for position:absolute/fixed and float:left/right; otherwise
   // equal to mDisplay.

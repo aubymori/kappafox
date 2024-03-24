@@ -20,6 +20,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsString.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 
@@ -218,6 +219,10 @@ nsresult NS_NewElement(Element** aResult,
                                            kNameSpaceID_disabled_SVG,
                                            ni->NodeType(), ni->GetExtraName());
     return NS_NewXMLElement(aResult, genericXMLNI.forget());
+  }
+  if (ns == kNameSpaceID_XBL && ni->Equals(nsGkAtoms::children)) {
+    NS_ADDREF(*aResult = new XBLChildrenElement(ni.forget()));
+    return NS_OK;
   }
 
   return NS_NewXMLElement(aResult, ni.forget());

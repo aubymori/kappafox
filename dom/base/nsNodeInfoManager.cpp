@@ -27,6 +27,7 @@
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
 #include "nsLayoutStatics.h"
+#include "nsBindingManager.h"
 #include "nsHashKeys.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"
@@ -48,6 +49,7 @@ nsNodeInfoManager::nsNodeInfoManager(mozilla::dom::Document* aDocument,
       mTextNodeInfo(nullptr),
       mCommentNodeInfo(nullptr),
       mDocumentNodeInfo(nullptr),
+      mBindingManager(new nsBindingManager(aDocument)),
       mRecentlyUsedNodeInfos(),
       mArena(nullptr) {
   nsLayoutStatics::AddRef();
@@ -71,6 +73,8 @@ nsNodeInfoManager::~nsNodeInfoManager() {
 
   mArena = nullptr;
 
+  mBindingManager = nullptr;
+
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
             ("NODEINFOMANAGER %p destroyed", this));
@@ -85,6 +89,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNodeInfoManager)
   if (tmp->mNonDocumentNodeInfos) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocument)
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBindingManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsNodeInfoManager)
@@ -109,6 +114,10 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsNodeInfoManager)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 void nsNodeInfoManager::DropDocumentReference() {
+  if (mBindingManager) {
+    mBindingManager->DropDocumentReference();
+  }
+
   // This is probably not needed anymore.
   for (const auto& entry : mNodeInfoHash.Values()) {
     entry->mDocument = nullptr;
@@ -401,6 +410,11 @@ bool nsNodeInfoManager::InternalMathMLEnabled() {
 
 void nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   aSizes.mDOMSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
+
+  if (mBindingManager) {
+    aSizes.mBindingsSize +=
+        mBindingManager->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+  }
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:

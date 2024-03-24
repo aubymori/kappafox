@@ -198,6 +198,8 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsAtom.h"
 #include "nsBaseHashtable.h"
+#include "nsBindingManager.h"
+#include "nsXBLService.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -2205,6 +2207,11 @@ nsresult nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         // VR display, it is safe to choose the first VR display for now.
         break;
       }
+    }
+    // Execute bindingdetached handlers before we tear ourselves
+    // down.
+    if (mDoc) {
+      mDoc->BindingManager()->ExecuteDetachedHandlers();
     }
     mIsDocumentLoaded = false;
     // Tell the parent process that the document is not loaded.

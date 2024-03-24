@@ -224,6 +224,7 @@
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
+#include "nsBindingManager.h"
 #include "nsBaseHashtable.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCOMPtr.h"
@@ -2769,7 +2770,9 @@ bool nsContentUtils::ThreadsafeIsSystemCaller(JSContext* aCx) {
 bool nsContentUtils::LookupBindingMember(
     JSContext* aCx, nsIContent* aContent, JS::Handle<jsid> aId,
     JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
-  return true;
+  nsXBLBinding* binding = aContent->GetXBLBinding();
+  if (!binding) return true;
+  return binding->LookupMember(aCx, aId, aDesc);
 }
 
 nsINode* nsContentUtils::GetNearestInProcessCrossDocParentNode(

@@ -42,6 +42,8 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsTextNode.h"
+#include "nsBindingManager.h"
+#include "nsXBLBinding.h"
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 
 using namespace mozilla;

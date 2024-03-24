@@ -35,6 +35,7 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsGlobalWindowInner.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsINode.h"
 #include "nsString.h"
 #include "nsTPromiseFlatString.h"
@@ -174,6 +175,29 @@ bool nsJSUtils::GetScopeChainForElement(
     }
   }
 
+  return true;
+}
+
+/* static */
+bool nsJSUtils::GetScopeChainForXBL(
+    JSContext* aCx, Element* aElement,
+    const nsXBLPrototypeBinding& aProtoBinding,
+    JS::MutableHandleVector<JSObject*> aScopeChain) {
+  if (!aElement) {
+    return true;
+  }
+
+  if (!aProtoBinding.SimpleScopeChain()) {
+    return GetScopeChainForElement(aCx, aElement, aScopeChain);
+  }
+
+  if (!AddScopeChainItem(aCx, aElement, aScopeChain)) {
+    return false;
+  }
+
+  if (!AddScopeChainItem(aCx, aElement->OwnerDoc(), aScopeChain)) {
+    return false;
+  }
   return true;
 }
 

@@ -106,6 +106,7 @@
 #include "nsIXPConnect.h"
 #include "nsMenuPopupFrame.h"
 #include "nsNodeInfoManager.h"
+#include "nsXBLBinding.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIDOMWindowInlines.h"
 #include "nsPresContext.h"

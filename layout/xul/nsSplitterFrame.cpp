@@ -39,6 +39,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/UniquePtr.h"
+#include "nsBindingManager.h"
 #include "nsStyledElement.h"
 
 using namespace mozilla;

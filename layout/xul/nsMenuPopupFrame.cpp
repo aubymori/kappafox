@@ -34,6 +34,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsPIWindowRoot.h"
 #include "nsIReflowCallback.h"
+#include "nsBindingManager.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsISound.h"

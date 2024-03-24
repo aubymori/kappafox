@@ -8,6 +8,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
@@ -61,6 +62,14 @@ nsIContent* FlattenedChildIterator::GetNextChild() {
     mChild = assignedNodes[++mIndexInInserted]->AsContent();
     return mChild;
   }
+
+  MOZ_ASSERT(mChild->IsActiveChildrenElement());
+  auto* childrenElement = static_cast<XBLChildrenElement*>(mChild);
+  if (mIndexInInserted < childrenElement->InsertedChildrenLength()) {
+    return childrenElement->InsertedChild(mIndexInInserted++);
+  }
+  mIndexInInserted = 0;
+  mChild = mChild->GetNextSibling();
 
   if (mIsFirst) {  // at the beginning of the child list
     mChild = mParent->GetFirstChild();

@@ -218,6 +218,7 @@
 #include "ScrollSnap.h"
 #include "VisualViewport.h"
 #include "ZoomConstraintsClient.h"
+#include "nsBindingManager.h"
 
 // define the scalfactor of drag and drop images
 // relative to the max screen height/width
@@ -1715,6 +1716,22 @@ void PresShell::EndObservingDocument() {
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
+#ifdef MOZ_XBL
+class XBLConstructorRunner : public Runnable {
+ public:
+  explicit XBLConstructorRunner(Document* aDocument)
+      : Runnable("XBLConstructorRunner"), mDocument(aDocument) {}
+
+  NS_IMETHOD Run() override {
+    mDocument->BindingManager()->ProcessAttachedQueue();
+    return NS_OK;
+  }
+
+ private:
+  RefPtr<Document> mDocument;
+};
+#endif
+
 void PresShell::InitPaintSuppressionTimer() {
   // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
   Document* doc = mDocument->GetDisplayDocument()
@@ -1807,6 +1824,11 @@ nsresult PresShell::Initialize() {
     // (which sets up a script blocker) going out of scope may have killed us
     // too
     NS_ENSURE_STATE(!mHaveShutDown);
+
+    // Run the XBL binding constructors for any new frames we've constructed.
+    // (Do this in a script runner, since our caller might have a script
+    // blocker on the stack.)
+    nsContentUtils::AddScriptRunner(new XBLConstructorRunner(mDocument));
   }
 
   if (mDocument->HasAutoFocusCandidates()) {
@@ -4363,6 +4385,13 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
       mNeedStyleFlush = false;
+    }
+
+    // Process whatever XBL constructors those restyles queued up.  This
+    // ensures that onload doesn't fire too early and that we won't do extra
+    // reflows after those constructors run.
+    if (MOZ_LIKELY(!mIsDestroying)) {
+      mDocument->BindingManager()->ProcessAttachedQueue();
     }
 
     AssertFrameTreeIsSane(*this);

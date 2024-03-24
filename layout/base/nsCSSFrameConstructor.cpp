@@ -68,6 +68,9 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsTextFragment.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsBindingManager.h"
+#include "nsXBLBinding.h"
+#include "nsXBLService.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #ifdef XP_MACOSX
@@ -2411,6 +2414,38 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
       ServoStyleSet::ResolveServoStyle(*aDocElement);
 
   const nsStyleDisplay* display = computedStyle->StyleDisplay();
+
+  // Ensure that our XBL bindings are installed.
+  //
+  // FIXME(emilio): Can we remove support for bindings on the root?
+  // FUCKYOU(aubymori): no
+  if (display->mBinding.IsUrl()) {
+    // Get the XBL loader.
+    nsresult rv;
+
+    nsXBLService* xblService = nsXBLService::GetInstance();
+    if (!xblService) {
+      return nullptr;
+    }
+
+    const auto& url = display->mBinding.AsUrl();
+
+    RefPtr<nsXBLBinding> binding;
+    rv = xblService->LoadBindings(aDocElement, url.GetURI(),
+                                  url.ExtraData().Principal(),
+                                  getter_AddRefs(binding));
+    if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED) {
+      // Binding will load asynchronously.
+      return nullptr;
+    }
+
+    if (binding) {
+      // For backwards compat, keep firing the root's constructor
+      // after all of its kids' constructors.  So tell the binding
+      // manager about it right now.
+      mDocument->BindingManager()->AddToAttachedQueue(binding);
+    }
+  }
 
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
@@ -5190,6 +5225,45 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
     default:
       return nullptr;
   }
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
+    UniquePtr<PendingBinding> aPendingBinding)
+    : mPendingBinding(std::move(aPendingBinding)), mSuccess(true) {}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
+
+nsCSSFrameConstructor::XBLBindingLoadInfo
+nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
+                                              const ComputedStyle& aStyle,
+                                              uint32_t aFlags) {
+  if (!(aFlags & ITEM_ALLOW_XBL_BASE)) {
+    return XBLBindingLoadInfo(nullptr);
+  }
+
+  const auto& binding = aStyle.StyleDisplay()->mBinding;
+  if (binding.IsNone()) {
+    return XBLBindingLoadInfo(nullptr);
+  }
+
+  nsXBLService* xblService = nsXBLService::GetInstance();
+  if (!xblService) {
+    return {};
+  }
+
+  auto newPendingBinding = MakeUnique<PendingBinding>();
+  const auto& url = binding.AsUrl();
+  nsresult rv = xblService->LoadBindings(
+      aContent.AsElement(), url.GetURI(), url.ExtraData().Principal(),
+      getter_AddRefs(newPendingBinding->mBinding));
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_XBL_BLOCKED) {
+      return XBLBindingLoadInfo(nullptr);
+    }
+    return {};
+  }
+
+  return XBLBindingLoadInfo(std::move(newPendingBinding));
 }
 
 void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
