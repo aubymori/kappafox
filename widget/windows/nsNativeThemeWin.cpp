@@ -68,9 +68,17 @@ bool nsNativeThemeWin::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
          aAppearance == StyleAppearance::SpinnerDownbutton;
 }
 
+bool nsNativeThemeWin::IsWidgetAlwaysNative(StyleAppearance aAppearance) {
+  return aAppearance == StyleAppearance::Groupbox;
+}
+
 auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
                                          StyleAppearance aAppearance)
     -> NonNative {
+  if (IsWidgetAlwaysNative(aAppearance)) {
+    return NonNative::No;
+  }
+
   if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return NonNative::Always;
   }
@@ -479,6 +487,7 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Button:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
+    case StyleAppearance::Groupbox:
       return Some(eUXButton);
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
@@ -624,6 +633,13 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
 
       // 4 unchecked states, 4 checked states, 4 indeterminate states.
       aState += inputState * 4;
+      return NS_OK;
+    }
+    case StyleAppearance::Groupbox: {
+      aPart = BP_GROUPBOX;
+      aState = TS_NORMAL;
+      // Since we don't support groupbox disabled and GBS_DISABLED looks the
+      // same as GBS_NORMAL don't bother supporting GBS_DISABLED.
       return NS_OK;
     }
     case StyleAppearance::NumberInput:
@@ -1318,6 +1334,7 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
   }
 
   switch (aAppearance) {
+    case StyleAppearance::Groupbox:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Toolbox:
@@ -1531,6 +1548,7 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Radio:
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
+    case StyleAppearance::Groupbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Listbox:
@@ -1550,6 +1568,7 @@ LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
   LayoutDeviceIntMargin result;
   switch (aAppearance) {
+    case StyleAppearance::Groupbox:
     case StyleAppearance::Button:
       result.top = result.left = result.bottom = result.right = 2;
       break;
@@ -1608,6 +1627,7 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Button:
+    case StyleAppearance::Groupbox:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
     case StyleAppearance::NumberInput:
@@ -1720,6 +1740,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanel:
     case StyleAppearance::Tabpanels:
+    case StyleAppearance::Groupbox:
       // these don't use DrawFrameControl
       return NS_OK;
     default:
@@ -1942,6 +1963,10 @@ RENDER_AGAIN:
 
       break;
     }
+    case StyleAppearance::Groupbox:
+      ::DrawEdge(hdc, &widgetRect, EDGE_ETCHED, BF_RECT | BF_ADJUST);
+      ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_BTNFACE + 1));
+      break;
     // Draw 3D face background controls
     case StyleAppearance::ProgressBar:
       // Draw 3D border
