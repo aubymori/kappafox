@@ -571,7 +571,7 @@ pref("browser.urlbar.showSearchTerms.featureGate", false);
 
 // If true, show the search term in the Urlbar while on
 // a default search engine results page.
-pref("browser.urlbar.showSearchTerms.enabled", true);
+pref("browser.urlbar.showSearchTerms.enabled", false);
 
 // Controls the empty search behavior in Search Mode:
 //  0 - Show nothing
