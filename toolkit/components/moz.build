@@ -93,7 +93,7 @@ if CONFIG["NS_PRINTING"]:
 
 if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     DIRS += [
-        "aboutconfig",
+        "viewconfig",
         "narrate",
         "reader",
         "viaduct",
