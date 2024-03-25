@@ -74,6 +74,7 @@ bool nsNativeThemeWin::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
 bool nsNativeThemeWin::IsWidgetAlwaysNative(StyleAppearance aAppearance) {
   return aAppearance == StyleAppearance::Groupbox ||
          aAppearance == StyleAppearance::Tooltip ||
+         aAppearance == StyleAppearance::FocusOutline ||
          (IsWidgetScrollbarPart(aAppearance) &&
          StaticPrefs::widget_non_native_theme_scrollbar_state() == 0);
 }
@@ -512,6 +513,7 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
+    case StyleAppearance::FocusOutline:
       return Some(eUXEdit);
     case StyleAppearance::Tooltip:
       return Some(eUXTooltip);
@@ -703,6 +705,12 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         aState = TFS_EDITBORDER_NORMAL;
       }
 
+      return NS_OK;
+    }
+    case StyleAppearance::FocusOutline: {
+      // XXX the EDITBORDER values don't respect DTBG_OMITCONTENT
+      aPart = TFP_TEXTFIELD;  // TFP_EDITBORDER_NOSCROLL;
+      aState = TS_FOCUSED;    // TFS_EDITBORDER_FOCUSED;
       return NS_OK;
     }
     case StyleAppearance::Tooltip: {
@@ -1146,6 +1154,18 @@ RENDER_AGAIN:
   } else if (aAppearance == StyleAppearance::Progresschunk) {
     DrawThemedProgressMeter(aFrame, aAppearance, theme, hdc, part, state,
                             &widgetRect, &clipRect);
+  } else if (aAppearance == StyleAppearance::FocusOutline) {
+    // Inflate 'widgetRect' with the focus outline size.
+    LayoutDeviceIntMargin border = GetWidgetBorder(
+        aFrame->PresContext()->DeviceContext(), aFrame, aAppearance);
+    widgetRect.left -= border.left;
+    widgetRect.right += border.right;
+    widgetRect.top -= border.top;
+    widgetRect.bottom += border.bottom;
+
+    DTBGOPTS opts = {sizeof(DTBGOPTS), DTBG_OMITCONTENT | DTBG_CLIPRECT,
+                     clipRect};
+    DrawThemeBackgroundEx(theme, hdc, part, state, &widgetRect, &opts);
   }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
@@ -1248,7 +1268,7 @@ static void ScaleForFrameDPI(LayoutDeviceIntSize* aSize, nsIFrame* aFrame) {
 
 LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
+  if (IsWidgetAlwaysNonNative(aFrame, aAppearance) && !IsWidgetAlwaysNative(aAppearance)) {
     return Theme::GetWidgetBorder(aContext, aFrame, aAppearance);
   }
 
@@ -1430,6 +1450,18 @@ bool nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
   }
 #endif
 
+  if (aAppearance == StyleAppearance::FocusOutline) {
+    LayoutDeviceIntMargin border =
+        GetWidgetBorder(aContext, aFrame, aAppearance);
+    int32_t p2a = aContext->AppUnitsPerDevPixel();
+    nsMargin m(NSIntPixelsToAppUnits(border.top, p2a),
+               NSIntPixelsToAppUnits(border.right, p2a),
+               NSIntPixelsToAppUnits(border.bottom, p2a),
+               NSIntPixelsToAppUnits(border.left, p2a));
+    aOverflowRect->Inflate(m);
+    return true;
+  }
+
   return false;
 }
 
@@ -1609,6 +1641,10 @@ bool nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
 
+  if (aAppearance == StyleAppearance::FocusOutline) {
+    return true;
+  }
+
   if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return Theme::ThemeSupportsWidget(aPresContext, aFrame, aAppearance);
   }
@@ -1738,6 +1774,7 @@ LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
+    case StyleAppearance::FocusOutline:
       result.top = result.left = result.bottom = result.right = 2;
       break;
     case StyleAppearance::Tooltip:
@@ -1944,6 +1981,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
     case StyleAppearance::NumberInput:
+    case StyleAppearance::FocusOutline:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::Menulist:
@@ -2377,6 +2415,7 @@ uint32_t nsNativeThemeWin::GetWidgetNativeDrawingFlags(
   switch (aAppearance) {
     case StyleAppearance::Button:
     case StyleAppearance::NumberInput:
+    case StyleAppearance::FocusOutline:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::Menulist:
