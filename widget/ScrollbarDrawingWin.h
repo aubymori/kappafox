@@ -12,6 +12,8 @@
 
 namespace mozilla::widget {
 
+const ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame);
+
 class ScrollbarDrawingWin : public ScrollbarDrawing {
  protected:
   explicit ScrollbarDrawingWin(Kind aKind) : ScrollbarDrawing(aKind) {}

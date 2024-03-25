@@ -39,6 +39,9 @@
 #include "nsWindow.h"
 #include "prinrval.h"
 #include "WinUtils.h"
+#include "ScrollbarDrawingWin.h"
+
+#include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -70,7 +73,9 @@ bool nsNativeThemeWin::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
 
 bool nsNativeThemeWin::IsWidgetAlwaysNative(StyleAppearance aAppearance) {
   return aAppearance == StyleAppearance::Groupbox ||
-         aAppearance == StyleAppearance::Tooltip;
+         aAppearance == StyleAppearance::Tooltip ||
+         (IsWidgetScrollbarPart(aAppearance) &&
+         StaticPrefs::widget_non_native_theme_scrollbar_state() == 0);
 }
 
 auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
@@ -78,6 +83,20 @@ auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
     -> NonNative {
   if (IsWidgetAlwaysNative(aAppearance)) {
     return NonNative::No;
+  }
+
+  if (IsWidgetScrollbarPart(aAppearance)) {
+    switch (StaticPrefs::widget_non_native_theme_scrollbar_state())
+    {
+      case 0:
+        return NonNative::No;
+      case 1:
+        return NonNative::Always;
+      default:
+        return GetCustomScrollbarStyle(aFrame) != nullptr
+        ? NonNative::Always
+        : NonNative::No;
+    }
   }
 
   if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
@@ -509,6 +528,16 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Tabpanel:
     case StyleAppearance::Tabpanels:
       return Some(eUXTab);
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::Scrollcorner:
+      return Some(eUXScrollbar);
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
       return Some(eUXTrackbar);
@@ -734,6 +763,67 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::Separator: {
       aPart = TP_SEPARATOR;
       aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight: {
+      aPart = SP_BUTTON;
+      aState = (int(aAppearance) - int(StyleAppearance::ScrollbarbuttonUp)) * 4;
+      ElementState eventState = GetContentState(aFrame, aAppearance);
+      if (!aFrame)
+        aState += TS_NORMAL;
+      else if (eventState.HasState(ElementState::DISABLED))
+        aState += TS_DISABLED;
+      else {
+        nsIFrame* parent = aFrame->GetParent();
+        ElementState parentState = GetContentState(
+          parent, parent->StyleDisplay()->EffectiveAppearance());
+        if (eventState.HasAllStates(ElementState::HOVER |
+                                    ElementState::ACTIVE))
+          aState += TS_ACTIVE;
+        else if (eventState.HasState(ElementState::HOVER))
+          aState += TS_HOVER;
+        else if (parentState.HasState(ElementState::HOVER))
+          aState =
+              (int(aAppearance) - int(StyleAppearance::ScrollbarbuttonUp)) +
+              SP_BUTTON_IMPLICIT_HOVER_BASE;
+        else
+          aState += TS_NORMAL;
+      }
+      return NS_OK;
+    }
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::ScrollbarVertical: {
+      aPart = (aAppearance == StyleAppearance::ScrollbarHorizontal)
+                  ? SP_TRACKSTARTHOR
+                  : SP_TRACKSTARTVERT;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarthumbVertical: {
+      aPart = (aAppearance == StyleAppearance::ScrollbarthumbHorizontal)
+                  ? SP_THUMBHOR
+                  : SP_THUMBVERT;
+      ElementState eventState = GetContentState(aFrame, aAppearance);
+      if (!aFrame)
+        aState = TS_NORMAL;
+      else if (eventState.HasState(ElementState::DISABLED))
+        aState = TS_DISABLED;
+      else {
+        if (eventState.HasState(
+                ElementState::ACTIVE))  // Hover is not also a requirement for
+                                         // the thumb, since the drag is not
+                                         // canceled when you move outside the
+                                         // thumb.
+          aState = TS_ACTIVE;
+        else if (eventState.HasState(ElementState::HOVER))
+          aState = TS_HOVER;
+        else
+          aState = TS_NORMAL;
+      }
       return NS_OK;
     }
     case StyleAppearance::Range: {
@@ -1095,6 +1185,26 @@ RENDER_AGAIN:
     widgetRect.bottom = widgetRect.top + TB_SEPARATOR_HEIGHT;
     DrawThemeEdge(theme, hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP,
                   nullptr);
+  } else if (aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
+             aAppearance == StyleAppearance::ScrollbarthumbVertical) {
+    // Draw the decorative gripper for the scrollbar thumb button, if it fits
+
+    SIZE gripSize;
+    MARGINS thumbMgns;
+    int gripPart = (aAppearance == StyleAppearance::ScrollbarthumbHorizontal)
+                       ? SP_GRIPPERHOR
+                       : SP_GRIPPERVERT;
+
+    if (GetThemePartSize(theme, hdc, gripPart, state, nullptr, TS_TRUE,
+                         &gripSize) == S_OK &&
+        GetThemeMargins(theme, hdc, part, state, TMT_CONTENTMARGINS, nullptr,
+                        &thumbMgns) == S_OK &&
+        gripSize.cx + thumbMgns.cxLeftWidth + thumbMgns.cxRightWidth <=
+            widgetRect.right - widgetRect.left &&
+        gripSize.cy + thumbMgns.cyTopHeight + thumbMgns.cyBottomHeight <=
+            widgetRect.bottom - widgetRect.top) {
+      DrawThemeBackground(theme, hdc, gripPart, state, &widgetRect, &clipRect);
+    }
   }
 
   nativeDrawing.EndNativeDrawing();
@@ -1362,6 +1472,18 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
   //  Windows appears to always use metrics when drawing standard scrollbars)
   THEMESIZE sizeReq = TS_TRUE;  // Best-fit size
   switch (aAppearance) {
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::ScrollbarVertical: {
+      auto result = ClassicGetMinimumWidgetSize(aFrame, aAppearance);
+      ScaleForFrameDPI(&result, aFrame);
+      return result;
+    }
     case StyleAppearance::ProgressBar:
       // Best-fit size for progress meters is too large for most
       // themes. We want these widgets to be able to really shrink
@@ -1376,6 +1498,17 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
       }
       ScaleForFrameDPI(&result, aFrame);
       return result;
+    }
+
+    case StyleAppearance::Scrollcorner: {
+      if (nsLookAndFeel::GetInt(nsLookAndFeel::IntID::UseOverlayScrollbars) !=
+          0) {
+        LayoutDeviceIntSize result(::GetSystemMetrics(SM_CXHSCROLL),
+                                   ::GetSystemMetrics(SM_CYVSCROLL));
+        ScaleForFrameDPI(&result, aFrame);
+        return result;
+      }
+      break;
     }
 
     case StyleAppearance::Separator: {
@@ -1514,6 +1647,7 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
   }
 
   switch (aAppearance) {
+    case StyleAppearance::Scrollcorner:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Range:
@@ -1563,6 +1697,15 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
     case StyleAppearance::Groupbox:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::Scrollcorner:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Listbox:
@@ -1632,6 +1775,29 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::Checkbox:
       result.width = result.height = 13;
       break;
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+      // For scrollbar-width:thin, we don't display the buttons.
+      if (!ScrollbarDrawing::IsScrollbarWidthThin(aFrame)) {
+        result.width = ::GetSystemMetrics(SM_CXVSCROLL);
+        result.height = ::GetSystemMetrics(SM_CYVSCROLL);
+      }
+      break;
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+      // For scrollbar-width:thin, we don't display the buttons.
+      if (!ScrollbarDrawing::IsScrollbarWidthThin(aFrame)) {
+        result.width = ::GetSystemMetrics(SM_CXHSCROLL);
+        result.height = ::GetSystemMetrics(SM_CYHSCROLL);
+      }
+      break;
+    case StyleAppearance::ScrollbarVertical:
+      // XXX HACK We should be able to have a minimum height for the scrollbar
+      // track.  However, this causes problems when uncollapsing a scrollbar
+      // inside a tree.  See bug 201379 for details.
+
+      //      result.height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
+      break;
     case StyleAppearance::RangeThumb: {
       if (IsRangeHorizontal(aFrame)) {
         result.width = 12;
@@ -1659,7 +1825,37 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::Tabpanels:
       // no minimum widget size
       break;
-
+    case StyleAppearance::ScrollbarthumbVertical:
+      result.width = ::GetSystemMetrics(SM_CXVSCROLL);
+      result.height = ::GetSystemMetrics(SM_CYVTHUMB);
+      // Without theming, divide the thumb size by two in order to look more
+      // native
+      if (!GetTheme(aAppearance)) {
+        result.height >>= 1;
+      }
+      // If scrollbar-width is thin, divide the thickness by two to make
+      // it look more compact.
+      if (ScrollbarDrawing::IsScrollbarWidthThin(aFrame)) {
+        result.width >>= 1;
+      }
+      break;
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      result.width = ::GetSystemMetrics(SM_CXHTHUMB);
+      result.height = ::GetSystemMetrics(SM_CYHSCROLL);
+      // Without theming, divide the thumb size by two in order to look more
+      // native
+      if (!GetTheme(aAppearance)) {
+        result.width >>= 1;
+      }
+      // If scrollbar-width is thin, divide the thickness by two to make
+      // it look more compact.
+      if (ScrollbarDrawing::IsScrollbarWidthThin(aFrame)) {
+        result.height >>= 1;
+      }
+      break;
+    case StyleAppearance::ScrollbarHorizontal:
+      result.width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
+      break;
     default:
       break;
   }
@@ -1754,6 +1950,11 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::Scrollcorner:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Tooltip:
     case StyleAppearance::ProgressBar:
@@ -1763,6 +1964,40 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Groupbox:
       // these don't use DrawFrameControl
       return NS_OK;
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight: {
+      ElementState contentState = GetContentState(aFrame, aAppearance);
+
+      aPart = DFC_SCROLL;
+      switch (aAppearance) {
+        case StyleAppearance::ScrollbarbuttonUp:
+          aState = DFCS_SCROLLUP;
+          break;
+        case StyleAppearance::ScrollbarbuttonDown:
+          aState = DFCS_SCROLLDOWN;
+          break;
+        case StyleAppearance::ScrollbarbuttonLeft:
+          aState = DFCS_SCROLLLEFT;
+          break;
+        case StyleAppearance::ScrollbarbuttonRight:
+          aState = DFCS_SCROLLRIGHT;
+          break;
+        default:
+          break;
+      }
+
+      if (contentState.HasState(ElementState::DISABLED))
+        aState |= DFCS_INACTIVE;
+      else {
+        if (contentState.HasAllStates(ElementState::HOVER |
+                                      ElementState::ACTIVE))
+          aState |= DFCS_PUSHED | DFCS_FLAT;
+      }
+
+      return NS_OK;
+    }
     default:
       return NS_ERROR_FAILURE;
   }
@@ -1942,6 +2177,10 @@ RENDER_AGAIN:
     // Draw controls supported by DrawFrameControl
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
     /*case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::MozMenulistArrowButton:*/ {
@@ -2014,6 +2253,43 @@ RENDER_AGAIN:
                         (HBRUSH)COLOR_3DHILIGHT);
       }
 
+      break;
+    }
+    // Draw scrollbar thumb
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+
+      break;
+    // Draw scrollbar track background
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal: {
+      // Windows fills in the scrollbar track differently
+      // depending on whether these are equal
+      DWORD color3D, colorScrollbar, colorWindow;
+
+      color3D = ::GetSysColor(COLOR_3DFACE);
+      colorWindow = ::GetSysColor(COLOR_WINDOW);
+      colorScrollbar = ::GetSysColor(COLOR_SCROLLBAR);
+
+      if ((color3D != colorScrollbar) && (colorWindow != colorScrollbar))
+        // Use solid brush
+        ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_SCROLLBAR + 1));
+      else {
+        DrawCheckedRect(hdc, widgetRect, COLOR_3DHILIGHT, COLOR_3DFACE,
+                        (HBRUSH)COLOR_SCROLLBAR + 1);
+      }
+      // XXX should invert the part of the track being clicked here
+      // but the track is never :active
+
+      break;
+    }
+    case StyleAppearance::Scrollcorner: {
+      ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_SCROLLBAR + 1));
+
+      // Mozilla never added a break statement here, so drawing a classic theme
+      // scrollcorner would draw one but it would instantly be painted over by
+      // a range control as seen below. Thank you Mozilla!
       break;
     }
     // Draw scale track background

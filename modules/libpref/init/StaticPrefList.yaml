@@ -15801,7 +15801,18 @@
   value: false
   mirror: always
 
-# The style of scrollbars to use. Here are the current options:
+# When to use non-native scrollbars.
+#
+#   0: Never.
+#   1: Always.
+#   2: When frame is dark or has scrollbar theme (Photon behavior)
+#
+- name: widget.non-native-theme.scrollbar.state
+  type: int32_t
+  value: 0
+  mirror: always
+
+# The style of non-native scrollbars to use. Here are the current options:
 #
 #   0: Default platform scrollbar style.
 #   1: macOS scrollbars
