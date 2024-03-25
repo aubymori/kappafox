@@ -19,6 +19,7 @@
 enum nsUXThemeClass {
   eUXButton = 0,
   eUXEdit,
+  eUXTooltip,
   eUXRebar,
   eUXToolbar,
   eUXProgress,

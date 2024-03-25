@@ -410,29 +410,10 @@ tooltip:not([position]) {
   }
 }
 
+/* Makes InfoBackground and InfoText use proper colors */
 @media (-moz-platform: windows) {
   tooltip {
-    appearance: none;
-    border: 1px solid;
-  }
-
-  /* TODO(emilio): Probably make InfoText/InfoBackground do the right thing and
-   * remove this? */
-  @media not (prefers-contrast) {
-    tooltip {
-      background-color: #f9f9fb;
-      color: black;
-      border-color: #67676c;
-      border-radius: 4px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      tooltip {
-        background-color: #2b2a33;
-        color: white;
-        border-color: #f9f9fb;
-      }
-    }
+    color-scheme: light;
   }
 }
 

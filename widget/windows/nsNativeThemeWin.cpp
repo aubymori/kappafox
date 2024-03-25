@@ -69,7 +69,8 @@ bool nsNativeThemeWin::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
 }
 
 bool nsNativeThemeWin::IsWidgetAlwaysNative(StyleAppearance aAppearance) {
-  return aAppearance == StyleAppearance::Groupbox;
+  return aAppearance == StyleAppearance::Groupbox ||
+         aAppearance == StyleAppearance::Tooltip;
 }
 
 auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
@@ -493,6 +494,8 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
       return Some(eUXEdit);
+    case StyleAppearance::Tooltip:
+      return Some(eUXTooltip);
     case StyleAppearance::Toolbox:
       return Some(eUXRebar);
     case StyleAppearance::Toolbar:
@@ -671,6 +674,11 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         aState = TFS_EDITBORDER_NORMAL;
       }
 
+      return NS_OK;
+    }
+    case StyleAppearance::Tooltip: {
+      aPart = TTP_STANDARD;
+      aState = TS_NORMAL;
       return NS_OK;
     }
     case StyleAppearance::ProgressBar: {
@@ -1415,6 +1423,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::Toolbar ||
       aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
+      aAppearance == StyleAppearance::Tooltip ||
       aAppearance == StyleAppearance::Tabpanels ||
       aAppearance == StyleAppearance::Tabpanel ||
       aAppearance == StyleAppearance::Separator) {
@@ -1516,6 +1525,11 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
   HANDLE theme = GetTheme(aAppearance);
   // For the classic theme we don't really have a way of knowing
   if (!theme) {
+    // menu backgrounds and tooltips which can't be themed are opaque
+    if (/*aAppearance == StyleAppearance::Menupopup ||*/
+        aAppearance == StyleAppearance::Tooltip) {
+      return eOpaque;
+    }
     return eUnknownTransparency;
   }
 
@@ -1553,6 +1567,7 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
+    case StyleAppearance::Tooltip:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Tab:
@@ -1581,6 +1596,9 @@ LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
       result.top = result.left = result.bottom = result.right = 2;
+      break;
+    case StyleAppearance::Tooltip:
+      result.top = result.left = result.bottom = result.right = 1;
       break;
     case StyleAppearance::ProgressBar:
       result.top = result.left = result.bottom = result.right = 1;
@@ -1633,6 +1651,7 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
+    case StyleAppearance::Tooltip:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Tab:
@@ -1736,6 +1755,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
     case StyleAppearance::Progresschunk:
+    case StyleAppearance::Tooltip:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanel:
@@ -1963,6 +1983,13 @@ RENDER_AGAIN:
 
       break;
     }
+    // Draw ToolTip background
+    case StyleAppearance::Tooltip:
+      ::FrameRect(hdc, &widgetRect, ::GetSysColorBrush(COLOR_WINDOWFRAME));
+      InflateRect(&widgetRect, -1, -1);
+      ::FillRect(hdc, &widgetRect, ::GetSysColorBrush(COLOR_INFOBK));
+
+      break;
     case StyleAppearance::Groupbox:
       ::DrawEdge(hdc, &widgetRect, EDGE_ETCHED, BF_RECT | BF_ADJUST);
       ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_BTNFACE + 1));
