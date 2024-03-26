@@ -67,5 +67,7 @@ class nsUXThemeData {
 
   static void UpdateNativeThemeInfo();
   static bool IsHighContrastOn() { return sIsHighContrastOn; }
+
+  static bool AreFlatMenusEnabled();
 };
 #endif  // __UXThemeData_h__

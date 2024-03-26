@@ -478,6 +478,17 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   }
 }
 
+bool LookAndFeel::WindowsNonNativeMenusEnabled() {
+  switch (StaticPrefs::browser_display_windows_non_native_menus()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
 static constexpr struct {
   nsLiteralCString mName;
   widget::ThemeChangeKind mChangeKind =

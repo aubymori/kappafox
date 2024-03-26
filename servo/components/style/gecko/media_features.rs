@@ -629,6 +629,10 @@ fn eval_scripting(context: &Context, query_value: Option<Scripting>) -> bool {
     }
 }
 
+fn eval_moz_windows_non_native_menus(context: &Context) -> bool {
+    unsafe { bindings::Gecko_MediaFeatures_WindowsNonNativeMenus(context.device().document()) }
+}
+
 fn eval_moz_overlay_scrollbars(context: &Context) -> bool {
     unsafe { bindings::Gecko_MediaFeatures_UseOverlayScrollbars(context.device().document()) }
 }
@@ -687,7 +691,7 @@ macro_rules! lnf_int_feature {
 /// to support new types in these entries and (2) ensuring that either
 /// nsPresContext::MediaFeatureValuesChanged is called when the value that
 /// would be returned by the evaluator function could change.
-pub static MEDIA_FEATURES: [QueryFeatureDescription; 59] = [
+pub static MEDIA_FEATURES: [QueryFeatureDescription; 60] = [
     feature!(
         atom!("width"),
         AllowsRanges::Yes,
@@ -949,6 +953,12 @@ pub static MEDIA_FEATURES: [QueryFeatureDescription; 59] = [
         atom!("-moz-print-preview"),
         AllowsRanges::No,
         Evaluator::BoolInteger(eval_moz_print_preview),
+        FeatureFlags::CHROME_AND_UA_ONLY,
+    ),
+    feature!(
+        atom!("-moz-windows-non-native-menus"),
+        AllowsRanges::No,
+        Evaluator::BoolInteger(eval_moz_windows_non_native_menus),
         FeatureFlags::CHROME_AND_UA_ONLY,
     ),
     feature!(

@@ -82,6 +82,9 @@ void nsLookAndFeel::RefreshImpl() {
 }
 
 static bool UseNonNativeMenuColors(ColorScheme aScheme) {
+  if (!LookAndFeel::WindowsNonNativeMenusEnabled()) {
+    return false;
+  }
   return !LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme) ||
          aScheme == ColorScheme::Dark;
 }

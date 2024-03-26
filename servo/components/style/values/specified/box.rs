@@ -1512,172 +1512,200 @@ pub enum Appearance {
     /// The dropdown button(s) that open up a dropdown list.
     MenulistButton,
     /// Various arrows that go in buttons
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ButtonArrowDown,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ButtonArrowNext,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ButtonArrowPrevious,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ButtonArrowUp,
     /// A dual toolbar button (e.g., a Back button with a dropdown)
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Dualbutton,
     /// A groupbox.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Groupbox,
+    /// Menu Bar background
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menubar,
+    /// <menu> and <menuitem> appearances
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menuitem,
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Checkmenuitem,
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Radiomenuitem,
+    /// For text on non-iconic menuitems only
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menuitemtext,
+    /// The text part of a dropdown list, to left of button.
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    MenulistText,
     /// Menu Popup background.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menupopup,
+    /// menu checkbox/radio appearances
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menucheckbox,
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menuradio,
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menuseparator,
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menuarrow,
+    /// An image in the menu gutter, like in bookmarks or history.
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    Menuimage,
     /// The meter bar's meter indicator.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Meterchunk,
     /// The "arrowed" part of the dropdown button that open up a dropdown list.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozMenulistArrowButton,
     /// For HTML's <input type=number>
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     NumberInput,
     /// The progress bar's progress indicator
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Progresschunk,
     /// nsRangeFrame and its subparts
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Range,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     RangeThumb,
     /// The scrollbar slider
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarHorizontal,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarVertical,
     /// A scrollbar button (up/down/left/right).
     /// Keep these in order (some code casts these values to `int` in order to
     /// compare them against each other).
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarbuttonUp,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarbuttonDown,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarbuttonLeft,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarbuttonRight,
     /// The scrollbar thumb.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarthumbHorizontal,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbarthumbVertical,
     /// The scrollbar track.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbartrackHorizontal,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ScrollbartrackVertical,
     /// The scroll corner
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Scrollcorner,
     /// A separator.  Can be horizontal or vertical.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Separator,
     /// A spin control (up/down control for time/date pickers).
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Spinner,
     /// The up button of a spin control.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     SpinnerUpbutton,
     /// The down button of a spin control.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     SpinnerDownbutton,
     /// The textfield of a spin control
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     SpinnerTextfield,
     /// A splitter.  Can be horizontal or vertical.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Splitter,
     /// A status bar in a main application window.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Statusbar,
     /// A single tab in a tab widget.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Tab,
     /// A single pane (inside the tabpanels container).
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Tabpanel,
     /// The tab panels container.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Tabpanels,
     /// The tabs scroll arrows (left/right).
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     TabScrollArrowBack,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     TabScrollArrowForward,
     /// A toolbar in an application window.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Toolbar,
     /// A single toolbar button (with no associated dropdown).
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Toolbarbutton,
     /// The dropdown portion of a toolbar button
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     ToolbarbuttonDropdown,
     /// The toolbox that contains the toolbars.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Toolbox,
     /// A tooltip.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Tooltip,
     /// A listbox or tree widget header
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treeheader,
     /// An individual header cell
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treeheadercell,
     /// A tree item.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treeitem,
     /// A tree widget branch line
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treeline,
     /// A tree widget twisty.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treetwisty,
     /// Open tree widget twisty.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treetwistyopen,
     /// A tree widget.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Treeview,
 
     /// Mac help button.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozMacHelpButton,
 
     /// An appearance value for the root, so that we can get unified toolbar looks (which require a
     /// transparent gecko background) without really using the whole transparency set-up which
     /// otherwise loses window borders, see bug 1870481.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozMacUnifiedToolbarWindow,
 
     /// Windows themed window frame elements.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowButtonBox,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowButtonClose,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowButtonMaximize,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowButtonMinimize,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowButtonRestore,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowTitlebar,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowTitlebarMaximized,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozWindowDecorations,
 
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozMacDisclosureButtonClosed,
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozMacDisclosureButtonOpen,
 
     /// A themed focus outline (for outline:auto).

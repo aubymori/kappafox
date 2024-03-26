@@ -867,6 +867,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   mIsRTL = aInitData->mRTL;
+  mForMenupopupFrame = aInitData->mForMenupopupFrame;
   mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
   mIsAlert = aInitData->mIsAlert;
@@ -1566,8 +1567,30 @@ void nsWindow::Show(bool bState) {
 #endif  // defined(ACCESSIBILITY)
   }
 
-  if (mWindowType == WindowType::Popup) {
-    MOZ_ASSERT(ChooseWindowClass(mWindowType) == kClassNameDropShadow);
+  if (mForMenupopupFrame) {
+    MOZ_ASSERT(ChooseWindowClass(mWindowType, mForMenupopupFrame) ==
+               kClassNameDropShadow);
+    const bool shouldUseDropShadow = [&] {
+      if (mTransparencyMode == TransparencyMode::Transparent) {
+        return false;
+      }
+      // Uncomment below when adding back Windows 7/8 frames 
+
+      // if (HasBogusPopupsDropShadowOnMultiMonitor() &&
+      //     WinUtils::GetMonitorCount() > 1 &&
+      //     !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
+      //   // See bug 603793. When we try to draw D3D9/10 windows with a drop
+      //   // shadow without the DWM on a secondary monitor, windows fails to
+      //   // composite our windows correctly. We therefor switch off the drop
+      //   // shadow for pop-up windows when the DWM is disabled and two monitors
+      //   // are connected.
+      //   return false;
+      // }
+      return true;
+    }();
+
+    ::SetClassLongA(mWnd, GCL_STYLE, shouldUseDropShadow ? CS_DROPSHADOW : 0);
+
     // WS_EX_COMPOSITED conflicts with the WS_EX_LAYERED style and causes
     // some popup menus to become invisible.
     LONG_PTR exStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
