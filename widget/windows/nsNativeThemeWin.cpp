@@ -41,8 +41,6 @@
 #include "WinUtils.h"
 #include "ScrollbarDrawingWin.h"
 
-#include "mozilla/StaticPrefs_widget.h"
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
@@ -63,17 +61,12 @@ nsNativeThemeWin::nsNativeThemeWin()
 
 nsNativeThemeWin::~nsNativeThemeWin() { nsUXThemeData::Invalidate(); }
 
-bool nsNativeThemeWin::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
-                                               StyleAppearance aAppearance) {
-  return Theme::IsWidgetAlwaysNonNative(aFrame, aAppearance) ||
-         aAppearance == StyleAppearance::SpinnerUpbutton ||
-         aAppearance == StyleAppearance::SpinnerDownbutton;
-}
-
 bool nsNativeThemeWin::IsWidgetAlwaysNative(StyleAppearance aAppearance) {
   return aAppearance == StyleAppearance::Groupbox ||
          aAppearance == StyleAppearance::Tooltip ||
          aAppearance == StyleAppearance::FocusOutline ||
+         aAppearance == StyleAppearance::SpinnerUpbutton ||
+         aAppearance == StyleAppearance::SpinnerDownbutton ||
          (IsWidgetScrollbarPart(aAppearance) &&
          StaticPrefs::widget_non_native_theme_scrollbar_state() == 0);
 }
@@ -612,6 +605,9 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
       return Some(eUXTrackbar);
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
+      return Some(eUXSpin);
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistArrowButton:
@@ -950,6 +946,20 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
           aState = TS_HOVER;
         else
           aState = TS_NORMAL;
+      }
+      return NS_OK;
+    }
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton: {
+      aPart = (aAppearance == StyleAppearance::SpinnerUpbutton) ? SPNP_UP
+                                                                : SPNP_DOWN;
+      ElementState elementState = GetContentState(aFrame, aAppearance);
+      if (!aFrame) {
+        aState = TS_NORMAL;
+      } else if (elementState.HasState(ElementState::DISABLED)) {
+        aState = TS_DISABLED;
+      } else {
+        aState = StandardGetState(aFrame, aAppearance, false);
       }
       return NS_OK;
     }
@@ -1482,29 +1492,6 @@ RENDER_AGAIN:
   else if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     DrawThemeBGRTLAware(theme, hdc, part, state, &widgetRect, &clipRect,
                         IsFrameRTL(aFrame));
-  } else if (aAppearance == StyleAppearance::NumberInput ||
-             aAppearance == StyleAppearance::Textfield ||
-             aAppearance == StyleAppearance::Textarea) {
-    DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-
-    if (state == TFS_EDITBORDER_DISABLED) {
-      InflateRect(&widgetRect, -1, -1);
-      ::FillRect(hdc, &widgetRect, reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1));
-    }
-  } else if (aAppearance == StyleAppearance::ProgressBar) {
-    // DrawThemeBackground renders each corner with a solid white pixel.
-    // Restore these pixels to the underlying color. Tracks are rendered
-    // using alpha recovery, so this makes the corners transparent.
-    COLORREF color;
-    color = GetPixel(hdc, widgetRect.left, widgetRect.top);
-    DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-    SetPixel(hdc, widgetRect.left, widgetRect.top, color);
-    SetPixel(hdc, widgetRect.right - 1, widgetRect.top, color);
-    SetPixel(hdc, widgetRect.right - 1, widgetRect.bottom - 1, color);
-    SetPixel(hdc, widgetRect.left, widgetRect.bottom - 1, color);
-  } else if (aAppearance == StyleAppearance::Progresschunk) {
-    DrawThemedProgressMeter(aFrame, aAppearance, theme, hdc, part, state,
-                            &widgetRect, &clipRect);
   } else if (aAppearance == StyleAppearance::NumberInput ||
              aAppearance == StyleAppearance::Textfield ||
              aAppearance == StyleAppearance::Textarea) {
@@ -2187,6 +2174,8 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistArrowButton:
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
     case StyleAppearance::Tooltip:
@@ -2299,6 +2288,11 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::Menuarrow:
       result.width = ::GetSystemMetrics(SM_CXMENUCHECK);
       result.height = ::GetSystemMetrics(SM_CYMENUCHECK);
+      break;
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
+      result.width = ::GetSystemMetrics(SM_CXVSCROLL);
+      result.height = 8;  // No good metrics available for this
       break;
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
@@ -2582,6 +2576,32 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
 
       return NS_OK;
     }
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton: {
+      ElementState contentState = GetContentState(aFrame, aAppearance);
+
+      aPart = DFC_SCROLL;
+      switch (aAppearance) {
+        case StyleAppearance::SpinnerUpbutton:
+          aState = DFCS_SCROLLUP;
+          break;
+        case StyleAppearance::SpinnerDownbutton:
+          aState = DFCS_SCROLLDOWN;
+          break;
+        default:
+          break;
+      }
+
+      if (contentState.HasState(ElementState::DISABLED)) {
+        aState |= DFCS_INACTIVE;
+      } else {
+        if (contentState.HasAllStates(ElementState::HOVER |
+                                      ElementState::ACTIVE))
+          aState |= DFCS_PUSHED;
+      }
+
+      return NS_OK;
+    }
     case StyleAppearance::Menuseparator:
       aPart = 0;
       aState = 0;
@@ -2844,12 +2864,12 @@ RENDER_AGAIN:
     // Draw controls supported by DrawFrameControl
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
-    /*case StyleAppearance::SpinnerUpbutton:
-    case StyleAppearance::SpinnerDownbutton:*/
     case StyleAppearance::MozMenulistArrowButton: {
       int32_t oldTA;
       // setup DC to make DrawFrameControl draw correctly
