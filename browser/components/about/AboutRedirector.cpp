@@ -109,7 +109,9 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::IS_SECURE_CHROME_UI},
     // Actual activity stream URL for home and newtab are set in channel
     // creation
-    {"home", "about:blank", ACTIVITY_STREAM_FLAGS},
+    {"home", "chrome://browser/content/abouthome/aboutHome.xhtml",
+      nsIAboutModule::ALLOW_SCRIPT |
+         nsIAboutModule::IS_SECURE_CHROME_UI},
     {"newtab", "chrome://browser/content/blanktab.html", ACTIVITY_STREAM_FLAGS},
     {"welcome", "about:blank",
      nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
@@ -219,9 +221,8 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
 
       // Let the aboutNewTabService decide where to redirect for about:home and
       // enabled about:newtab. Disabled about:newtab page uses fallback.
-      if (path.EqualsLiteral("home") ||
-          (StaticPrefs::browser_newtabpage_enabled() &&
-           path.EqualsLiteral("newtab"))) {
+      if (StaticPrefs::browser_newtabpage_enabled() &&
+           path.EqualsLiteral("newtab")) {
         nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
             do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);
