@@ -791,9 +791,6 @@ void nsHttpHandler::BuildUserAgent() {
   // "Firefox/x.y" (compatibility) app token
   mUserAgent += ' ';
   mUserAgent += mCompatFirefox;
-  // App portion
-  mUserAgent += " Nara/";
-  mUserAgent += mAppVersion;
 }
 
 #ifdef XP_WIN
