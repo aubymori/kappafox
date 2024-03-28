@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>About:</title>
+  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="toolkit/about/about.ftl"/>
+</head>
+
+<body>
+  <div id="aboutLogoContainer">
+    <a id="vendorURL">
+      <img src="about:logo" data-l10n-id="about-logo"/>
+      <p id="version" data-l10n-id="about-version"></p>
+    </a>
+  </div>
+
+  <ul id="aboutPageList">
+    <li data-l10n-id="about-credits">
+      <a href="about:credits" data-l10n-name="credits-link"></a>
+    </li>
+    <li data-l10n-id="about-license">
+      <a href="about:license" data-l10n-name="license-link"></a>
+    </li>
+    <li data-l10n-id="about-buildconfig">
+      <a href="about:buildconfig" data-l10n-name="buildconfig-link"></a>
+    </li>
+    <li id="buildID" data-l10n-id="about-buildID"></li>
+  </ul>
+  <script type="text/javascript" src="chrome://global/content/about.js"/>
+</body>
+</html>

@@ -2,29 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// get release notes and vendor URL from prefs
-var releaseNotesURL = Services.urlFormatter.formatURLPref(
-  "app.releaseNotesURL"
-);
-if (releaseNotesURL != "about:blank") {
-  var relnotes = document.getElementById("releaseNotesURL");
-  relnotes.setAttribute("href", releaseNotesURL);
-  relnotes.parentNode.removeAttribute("hidden");
-}
-
-var vendorURL = Services.urlFormatter.formatURLPref("app.vendorURL");
-if (vendorURL != "about:blank") {
-  var vendor = document.getElementById("vendorURL");
-  vendor.setAttribute("href", vendorURL);
+// We need to wait for Fluent to fill the elements first
+async function waitForElement(sel) {
+  while (document.querySelector(sel) == null) {
+    await new Promise(r => requestAnimationFrame(r));
+  }
+  return document.querySelector(sel);
 }
 
 // insert the version of the XUL application (!= XULRunner platform version)
-var versionNum = Services.appinfo.version;
-var version = document.getElementById("version");
-version.textContent += " " + versionNum;
+waitForElement("#version:not(:empty)").then(version => {
+  version.textContent += " " + Services.appinfo.version;
+});
 
 // append user agent
-var ua = navigator.userAgent;
-if (ua) {
-  document.getElementById("buildID").textContent += " " + ua;
-}
+waitForElement("#buildID:not(:empty)").then(buildID => {
+  buildID.textContent += " " + navigator.userAgent;
+});

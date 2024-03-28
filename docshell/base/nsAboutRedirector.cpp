@@ -85,6 +85,8 @@ class CrashChannel final : public nsBaseChannel {
     docshell/build/components.conf
  */
 static const RedirEntry kRedirMap[] = {
+    {"", "chrome://global/content/about.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
     {"about", "chrome://global/content/aboutAbout.html", 0},
     {"addons", "chrome://mozapps/content/extensions/aboutaddons.html",
      nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
