@@ -138,7 +138,7 @@ function fitToWidth() {
 }
 
 function updateSessionRestoreState() {
-  if (SessionStore.canRestoreLastSession && !PrivateBrowsingUtils.isWindowPrivate(window)) {
+  if (SessionStore.canRestoreLastSession && !PrivateBrowsingUtils.isContentWindowPrivate(window)) {
     document.getElementById("launcher").setAttribute("session", "true");
   }
 }
