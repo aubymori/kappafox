@@ -606,7 +606,8 @@ nsSize nsStyleOutline::EffectiveOffsetFor(const nsRect& aRect) const {
 nsStyleList::nsStyleList()
     : mListStylePosition(StyleListStylePosition::Outside),
       mQuotes(StyleQuotes::Auto()),
-      mListStyleImage(StyleImage::None()) {
+      mListStyleImage(StyleImage::None()),
+      mImageRegion(StyleClipRectOrAuto::Auto()) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -617,7 +618,8 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
     : mListStylePosition(aSource.mListStylePosition),
       mCounterStyle(aSource.mCounterStyle),
       mQuotes(aSource.mQuotes),
-      mListStyleImage(aSource.mListStyleImage) {
+      mListStyleImage(aSource.mListStyleImage),
+      mImageRegion(aSource.mImageRegion) {
   MOZ_COUNT_CTOR(nsStyleList);
 }
 

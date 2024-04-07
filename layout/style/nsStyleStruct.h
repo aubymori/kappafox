@@ -640,11 +640,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
+  nsRect GetImageRegion() const {
+    if (!mImageRegion.IsRect()) {
+      return nsRect();
+    }
+    return mImageRegion.AsRect().ToLayoutRect(0);
+  }
+
   mozilla::StyleListStylePosition mListStylePosition;
 
   mozilla::CounterStylePtr mCounterStyle;
   mozilla::StyleQuotes mQuotes;
   mozilla::StyleImage mListStyleImage;
+
+  // the rect to use within an image.
+  mozilla::StyleClipRectOrAuto mImageRegion;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePage {

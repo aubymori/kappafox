@@ -2462,10 +2462,13 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
   SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
+  const nsRect subRect = StyleList()->GetImageRegion();
+  bool hasSubrect = (subRect.width > 0 || subRect.height > 0);
+
   ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
       aRenderingContext, PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
-      svgContext, aFlags, &anchorPoint);
+      svgContext, aFlags, &anchorPoint, hasSubrect ? &subRect : nullptr);
 
   if (nsImageMap* map = GetImageMap()) {
     gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
