@@ -58,6 +58,6 @@ th, td {
 }
 
 .columns {
-  -moz-column-width: 20em;
-  -moz-column-gap: 3em;
+  column-width: 20em;
+  column-gap: 3em;
 }
