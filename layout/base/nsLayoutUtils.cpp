@@ -6404,7 +6404,7 @@ ImgDrawResult nsLayoutUtils::DrawSingleImage(
   // transform but we don't want to actually tile the image.
   nsRect fill;
   fill.IntersectRect(aDest, dest);
-  return DrawImageInternal(aContext, aPresContext, aImage, aSamplingFilter,
+  return DrawImageInternal(aContext, aPresContext, image, aSamplingFilter,
                            dest, fill,
                            aAnchorPoint ? *aAnchorPoint : fill.TopLeft(),
                            aDirty, aSVGContext, aImageFlags);

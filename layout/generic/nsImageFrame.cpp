@@ -556,6 +556,11 @@ void nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   // TODO(emilio): We might want to do the same for regular list-style-image or
   // even simple content: url() changes.
   if (mKind == Kind::XULImage && aOldStyle) {
+    // Fetch the subrect used for clipping the image:
+    // Because this is only set from within here, subrects don't work at all
+    // outside of <xul:image> elements, so they don't affect web content.
+    mSubRect = StyleList()->GetImageRegion();
+
     if (!mContent->AsElement()->HasNonEmptyAttr(nsGkAtoms::src) &&
         aOldStyle->StyleList()->mListStyleImage !=
             StyleList()->mListStyleImage) {
@@ -2322,6 +2327,16 @@ nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   return nsRegion();
 }
 
+bool nsImageFrame::CanOptimizeToImageLayer() {
+  bool hasSubRect = (mSubRect.width > 0 || mSubRect.height > 0);
+
+  if (hasSubRect) {
+    return false;
+  }
+
+  return true;
+}
+
 bool nsDisplayImage::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -2334,6 +2349,11 @@ bool nsDisplayImage::CreateWebRenderCommands(
   MOZ_ASSERT(mFrame->IsImageFrame() || mFrame->IsImageControlFrame());
   // Image layer doesn't support draw focus ring for image map.
   auto* frame = static_cast<nsImageFrame*>(mFrame);
+
+  if (!frame->CanOptimizeToImageLayer()) {
+    return false;
+  }
+
   if (frame->HasImageMap()) {
     return false;
   }
@@ -2462,13 +2482,12 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
   SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
-  const nsRect subRect = StyleList()->GetImageRegion();
-  bool hasSubrect = (subRect.width > 0 || subRect.height > 0);
+  bool hasSubrect = (mSubRect.width > 0 || mSubRect.height > 0);
 
   ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
       aRenderingContext, PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
-      svgContext, aFlags, &anchorPoint, hasSubrect ? &subRect : nullptr);
+      svgContext, aFlags, &anchorPoint, hasSubrect ? &mSubRect : nullptr);
 
   if (nsImageMap* map = GetImageMap()) {
     gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
