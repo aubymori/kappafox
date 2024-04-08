@@ -66,9 +66,7 @@ bool nsNativeThemeWin::IsWidgetAlwaysNative(StyleAppearance aAppearance) {
          aAppearance == StyleAppearance::Tooltip ||
          aAppearance == StyleAppearance::FocusOutline ||
          aAppearance == StyleAppearance::SpinnerUpbutton ||
-         aAppearance == StyleAppearance::SpinnerDownbutton ||
-         (IsWidgetScrollbarPart(aAppearance) &&
-         StaticPrefs::widget_non_native_theme_scrollbar_state() == 0);
+         aAppearance == StyleAppearance::SpinnerDownbutton;
 }
 
 auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
