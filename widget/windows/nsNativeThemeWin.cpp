@@ -2302,11 +2302,8 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       break;
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
-      // For scrollbar-width:thin, we don't display the buttons.
-      if (!ScrollbarDrawing::IsScrollbarWidthThin(aFrame)) {
-        result.width = ::GetSystemMetrics(SM_CXHSCROLL);
-        result.height = ::GetSystemMetrics(SM_CYHSCROLL);
-      }
+      result.width = ::GetSystemMetrics(SM_CYHSCROLL);
+      result.height = ::GetSystemMetrics(SM_CYHSCROLL);
       break;
     case StyleAppearance::ScrollbarVertical:
       // XXX HACK We should be able to have a minimum height for the scrollbar
