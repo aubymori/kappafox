@@ -1,3 +1,7 @@
+# This codebase is discontinued.
+
+This codebase has been discontinued in favor of [a newer codebase](https://github.com/nara-browser/nara-browser).
+
 # Nara
 
 An experimental Mozilla-based web browser. Stay tuned!
